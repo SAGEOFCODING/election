@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { buildTimeline } = require('../services/electionData');
 const { getCollection } = require('../services/firestore');
+const cache = require('../services/cache');
+const { TIMELINE_CACHE_TTL_MS, QUIZ_CACHE_TTL_MS } = require('../utils/constants');
 
 /**
  * @route GET /api/election/timeline
@@ -10,7 +12,17 @@ const { getCollection } = require('../services/firestore');
  */
 router.get('/timeline', async (req, res, next) => {
   try {
+    const cacheKey = 'timeline';
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set('X-Cache', 'HIT');
+      return res.json(cached);
+    }
+
     const data = await buildTimeline();
+    cache.set(cacheKey, data, TIMELINE_CACHE_TTL_MS / 1000);
+    
+    res.set('X-Cache', 'MISS');
     res.status(200).json(data);
   } catch (error) {
     next(error);
@@ -24,8 +36,19 @@ router.get('/timeline', async (req, res, next) => {
  */
 router.get('/quizzes', async (req, res, next) => {
   try {
+    const cacheKey = 'quizzes';
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set('X-Cache', 'HIT');
+      return res.json(cached);
+    }
+
     const quizzes = await getCollection('quizzes');
-    res.status(200).json({ quizzes });
+    const response = { quizzes };
+    
+    cache.set(cacheKey, response, QUIZ_CACHE_TTL_MS / 1000);
+    res.set('X-Cache', 'MISS');
+    res.status(200).json(response);
   } catch (error) {
     next(error);
   }

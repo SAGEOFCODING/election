@@ -2,11 +2,13 @@ const express = require('express');
 const helmet = require('helmet');
 const cors = require('cors');
 const path = require('path');
+const compression = require('compression');
 require('dotenv').config();
 
 const logger = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 const { apiLimiter } = require('./middleware/rateLimiter');
+const cacheService = require('./services/cache');
 
 const authRoutes = require('./routes/auth');
 const electionRoutes = require('./routes/election');
@@ -16,6 +18,9 @@ const chatRoutes = require('./routes/chat');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Efficiency: Compression must be first
+app.use(compression());
 
 // Security Middlewares
 app.use(helmet({
@@ -38,7 +43,25 @@ app.use(cors({
 
 app.use(express.json());
 
-// Public config endpoint for client-side Firebase initialization
+/**
+ * @route GET /api/health
+ * @desc Health check endpoint for monitoring
+ * @access Public
+ */
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    cache: cacheService.stats()
+  });
+});
+
+/**
+ * @route GET /api/config/firebase
+ * @desc Public config endpoint for client-side Firebase initialization
+ * @access Public
+ */
 app.get('/api/config/firebase', (req, res) => {
   res.json({
     apiKey: process.env.FIREBASE_API_KEY || '',
@@ -59,8 +82,17 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/chat', chatRoutes);
 
-// Static Client Files
-app.use(express.static(path.join(__dirname, '../../public')));
+// Efficiency: Static files with HTTP caching
+app.use(express.static(path.join(__dirname, '../../public'), {
+  maxAge: '1d',
+  etag: true,
+  lastModified: true,
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+  }
+}));
 
 // Catch-all for SPA
 app.get('*', (req, res) => {

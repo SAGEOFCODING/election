@@ -4,6 +4,9 @@
 
 let auth2;
 
+/**
+ * Initializes Google Auth (GAPI) using configuration from the server
+ */
 async function initGoogleAuth() {
   try {
     const configRes = await fetch('/api/config/firebase');
@@ -22,26 +25,35 @@ async function initGoogleAuth() {
         scope: 'profile email'
       });
 
-      // Handle sign-in state changes
       auth2.isSignedIn.listen(signinChanged);
       auth2.currentUser.listen(userChanged);
 
-      // Render the official button
-      gapi.signin2.render('g-signin-btn', {
-        'scope': 'profile email',
-        'width': 240,
-        'height': 50,
-        'longtitle': true,
-        'theme': 'dark',
-        'onsuccess': onSignIn,
-        'onfailure': onSignInFailure
-      });
+      renderOfficialButton();
     });
   } catch (e) {
     console.error('Google Auth Initialization Failed:', e);
   }
 }
 
+/**
+ * Renders the official GAPI sign-in button
+ */
+function renderOfficialButton() {
+  gapi.signin2.render('g-signin-btn', {
+    scope: 'profile email',
+    width: 240,
+    height: 50,
+    longtitle: true,
+    theme: 'dark',
+    onsuccess: onSignIn,
+    onfailure: onSignInFailure
+  });
+}
+
+/**
+ * Success callback for Google Sign-In
+ * @param {Object} googleUser - The authenticated user object
+ */
 function onSignIn(googleUser) {
   const profile = googleUser.getBasicProfile();
   const idToken = googleUser.getAuthResponse().id_token;
@@ -49,6 +61,10 @@ function onSignIn(googleUser) {
   showSignedIn(profile.getName(), profile.getImageUrl());
 }
 
+/**
+ * Failure callback for Google Sign-In
+ * @param {Object} error - Error details
+ */
 function onSignInFailure(error) {
   console.error('Google Sign-In Error:', error);
   if (error.error === 'idpiframe_initialization_failed' || error.error === 'invalid_client') {
@@ -56,6 +72,9 @@ function onSignInFailure(error) {
   }
 }
 
+/**
+ * Shows a compact setup guide if OAuth ID is missing
+ */
 function showSetupGuide() {
   const signInWrapper = document.getElementById('g-signin-btn');
   if (signInWrapper) {
@@ -71,17 +90,30 @@ function showSetupGuide() {
   }
 }
 
+/**
+ * Handles sign-in state changes
+ * @param {boolean} val - Is signed in
+ */
 function signinChanged(val) {
-  if (!val) showSignedOut();
+  if (!val) {
+    showSignedOut();
+  }
 }
 
+/**
+ * Handles current user changes
+ * @param {Object} user - The current user object
+ */
 function userChanged(user) {
   if (user && user.isSignedIn()) {
     onSignIn(user);
   }
 }
 
-window.signOut = function() {
+/**
+ * Global sign out function
+ */
+window.signOut = function () {
   if (auth2) {
     auth2.signOut().then(() => {
       sessionStorage.removeItem('googleIdToken');
@@ -90,6 +122,11 @@ window.signOut = function() {
   }
 };
 
+/**
+ * Updates UI for signed-in state
+ * @param {string} name - User full name
+ * @param {string} photo - User profile picture URL
+ */
 function showSignedIn(name, photo) {
   const signInWrapper = document.getElementById('g-signin-btn');
   const signOutBtn = document.getElementById('sign-out-btn');
@@ -100,22 +137,25 @@ function showSignedIn(name, photo) {
     ? `<img src="${photo}" alt="" style="width:32px;height:32px;border-radius:50%;object-fit:cover;">`
     : `<div style="width:32px;height:32px;border-radius:50%;background:#3b82f6;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;">${name[0]}</div>`;
 
-  if (signInWrapper) signInWrapper.style.display = 'none';
-  if (signOutBtn) signOutBtn.style.display = 'inline-flex';
+  if (signInWrapper) { signInWrapper.style.display = 'none'; }
+  if (signOutBtn) { signOutBtn.style.display = 'inline-flex'; }
   if (userDisplay) {
     userDisplay.style.display = 'flex';
     userDisplay.innerHTML = `<div class="user-chip">${avatarHtml}<span class="user-name-text">${firstName}</span></div>`;
   }
 }
 
+/**
+ * Updates UI for signed-out state
+ */
 function showSignedOut() {
   const signInWrapper = document.getElementById('g-signin-btn');
   const signOutBtn = document.getElementById('sign-out-btn');
   const userDisplay = document.getElementById('user-display');
 
-  if (signInWrapper) signInWrapper.style.display = 'block';
-  if (signOutBtn) signOutBtn.style.display = 'none';
-  if (userDisplay) userDisplay.style.display = 'none';
+  if (signInWrapper) { signInWrapper.style.display = 'block'; }
+  if (signOutBtn) { signOutBtn.style.display = 'none'; }
+  if (userDisplay) { userDisplay.style.display = 'none'; }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -127,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Load GAPI and initialize
   if (typeof gapi !== 'undefined') {
     initGoogleAuth();
   } else {

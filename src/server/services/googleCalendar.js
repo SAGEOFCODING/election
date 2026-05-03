@@ -2,21 +2,23 @@ const { google } = require('googleapis');
 const logger = require('../utils/logger');
 require('dotenv').config();
 
-let mockMode = !process.env.GOOGLE_API_KEY;
+const mockMode = !process.env.GOOGLE_API_KEY;
 
 /**
  * Creates an event in the user's Google Calendar.
  * Since this requires user's OAuth token in a real scenario, we simulate it
  * or use an API key for public endpoints if applicable.
- * For this exercise, we will mock the event creation or use a simulated response.
- * @param {string} userToken - User's OAuth token (mocked here)
+ * @param {string} userToken - User's OAuth token
  * @param {Object} eventDetails - { summary, description, start, end }
  * @returns {Promise<Object>} event result
  */
 const createCalendarEvent = async (userToken, eventDetails) => {
   if (mockMode || userToken === 'mock-valid-token') {
     logger.info('Mock creating calendar event', eventDetails);
-    return { status: 201, data: { htmlLink: 'https://calendar.google.com/mock-event' } };
+    return { 
+      status: 201, 
+      data: { htmlLink: 'https://calendar.google.com/mock-event' } 
+    };
   }
 
   try {
@@ -38,7 +40,9 @@ const createCalendarEvent = async (userToken, eventDetails) => {
     return { status: 201, data: response.data };
   } catch (error) {
     logger.error('Error creating calendar event', { error: error.message });
-    throw new Error('Failed to create calendar event');
+    const err = new Error('Failed to create calendar event');
+    err.status = 500;
+    throw err;
   }
 };
 

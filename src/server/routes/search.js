@@ -1,5 +1,7 @@
 const express = require('express');
 const router = express.Router();
+const cache = require('../services/cache');
+const { SEARCH_CACHE_TTL_MS } = require('../utils/constants');
 
 /**
  * Local election news and resource database
@@ -136,62 +138,78 @@ const ELECTION_DATA = [
 ];
 
 /**
+ * Calculates relevance score for a search item based on keywords
+ * @param {Object} item - Data item
+ * @param {string[]} keywords - Search keywords
+ * @returns {number} Score
+ */
+const calculateRelevance = (item, keywords) => {
+  const text = `${item.title} ${item.snippet}`.toLowerCase();
+  return keywords.reduce((score, kw) => score + (text.includes(kw) ? 1 : 0), 0);
+};
+
+/**
  * Searches the local election data with keyword matching and category filtering
  * @param {string} query - Search query string
  * @param {string} filter - Category filter
  * @returns {Array} Matching search results
  */
-function searchLocalData(query, filter) {
+const searchLocalData = (query, filter) => {
   const lowerQuery = query.toLowerCase();
-  const keywords = lowerQuery.split(/\s+/).filter(w => w.length > 1);
+  const keywords = lowerQuery.split(/\s+/).filter((w) => w.length > 1);
 
-  let results = ELECTION_DATA.filter(item => {
+  const results = ELECTION_DATA.filter((item) => {
     const matchesFilter = !filter || filter === 'all' || 
-      item.category.some(c => c.toLowerCase() === filter.toLowerCase());
+      item.category.some((c) => c.toLowerCase() === filter.toLowerCase());
     
-    if (!matchesFilter) return false;
+    if (!matchesFilter) {
+      return false;
+    }
 
     const searchText = `${item.title} ${item.snippet} ${item.category.join(' ')}`.toLowerCase();
-    return keywords.some(kw => searchText.includes(kw));
+    return keywords.some((kw) => searchText.includes(kw));
   });
 
-  /* Sort by relevance: more keyword hits = higher rank */
-  results.sort((a, b) => {
-    const textA = `${a.title} ${a.snippet}`.toLowerCase();
-    const textB = `${b.title} ${b.snippet}`.toLowerCase();
-    const scoreA = keywords.reduce((s, kw) => s + (textA.includes(kw) ? 1 : 0), 0);
-    const scoreB = keywords.reduce((s, kw) => s + (textB.includes(kw) ? 1 : 0), 0);
-    return scoreB - scoreA;
-  });
+  results.sort((a, b) => calculateRelevance(b, keywords) - calculateRelevance(a, keywords));
 
-  return results.slice(0, 8).map(item => ({
+  return results.slice(0, 8).map((item) => ({
     title: item.title,
     snippet: item.snippet,
     link: item.link,
     source: item.source,
     thumbnail: null
   }));
-}
+};
 
 /**
- * GET /api/search
- * Searches election resources using local data (no API key required)
- * @param {string} req.query.q - Search query
- * @param {string} req.query.filter - Category filter
- * @returns {Object} { items: Array }
+ * @route GET /api/search
+ * @desc Searches election resources using local data (no API key required)
+ * @access Public
  */
-router.get('/', async (req, res) => {
+router.get('/', async (req, res, next) => {
   try {
     const { q, filter } = req.query;
     if (!q || q.trim().length < 2) {
-      return res.status(400).json({ error: 'Query too short' });
+      const error = new Error('Query too short');
+      error.status = 400;
+      throw error;
+    }
+
+    const cacheKey = `search:${q}:${filter || 'all'}`;
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      res.set('X-Cache', 'HIT');
+      return res.json(cached);
     }
 
     const items = searchLocalData(q.trim(), filter);
-    res.json({ items });
+    const response = { items };
+    
+    cache.set(cacheKey, response, SEARCH_CACHE_TTL_MS / 1000);
+    res.set('X-Cache', 'MISS');
+    res.json(response);
   } catch (err) {
-    console.error('Search error:', err.message);
-    res.status(500).json({ error: 'Search unavailable', items: [] });
+    next(err);
   }
 });
 

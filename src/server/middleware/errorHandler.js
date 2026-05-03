@@ -8,14 +8,20 @@ const logger = require('../utils/logger');
  * @param {Function} next - Express next function.
  * @returns {void}
  */
-const errorHandler = (err, req, res, next) => {
-  logger.error(`Error processing request ${req.method} ${req.url}`, { error: err.message, stack: err.stack });
-  
-  if (err.status) {
-    return res.status(err.status).json({ error: err.message });
-  }
+const errorHandler = (err, req, res, _next) => {
+  const status = err.status || 500;
+  const message = status === 500 ? 'Internal Server Error' : err.message;
 
-  res.status(500).json({ error: 'Internal Server Error' });
+  logger.error(`[${req.method}] ${req.url} - ${status}`, {
+    error: err.message,
+    stack: status === 500 ? err.stack : undefined
+  });
+  
+  res.status(status).json({
+    error: message,
+    status: 'error',
+    timestamp: new Date().toISOString()
+  });
 };
 
 module.exports = errorHandler;

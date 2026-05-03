@@ -13,7 +13,9 @@ router.post('/event', requireAuth, async (req, res, next) => {
     const { summary, description, start, end } = req.body;
     
     if (!summary || !start || !end) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      const error = new Error('Missing required fields');
+      error.status = 400;
+      throw error;
     }
 
     // In a real app, you'd retrieve the user's Google OAuth access token from DB or frontend.

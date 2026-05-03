@@ -16,7 +16,19 @@ describe('Firestore Service (Mock Mode)', () => {
   });
 
   test('getCollection returns mock data', async () => {
-    const tl = await getCollection('timeline');
-    expect(tl.length).toBeGreaterThan(0);
+    const q = await getCollection('quizzes');
+    expect(q.length).toBeGreaterThan(0);
+  });
+
+  test('getCollection returns empty array for unknown collection', async () => {
+    const result = await getCollection('unknown');
+    expect(result).toEqual([]);
+  });
+
+  test('addDocument returns doc with ID', async () => {
+    const data = { test: 'data' };
+    const result = await addDocument('any', data);
+    expect(result.id).toBe('mock-doc-id');
+    expect(result.test).toBe('data');
   });
 });

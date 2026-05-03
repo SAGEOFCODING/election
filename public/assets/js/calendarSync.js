@@ -1,11 +1,20 @@
+/**
+ * calendarSync.js — Global helper for synchronizing events to Google Calendar
+ */
+
+/**
+ * Initializes the global calendar synchronization helper
+ */
 export function initCalendarSync() {
-  // Common functions for calendar syncing across the app
-  // This logic is mostly handled individually by buttons (timeline, polling, etc)
-  // But we can expose a global helper if needed.
+  /**
+   * Global helper to sync an event to the user's calendar
+   * @param {Object} eventDetails - The event to add { summary, description, start, end }
+   */
   window.syncToCalendar = async (eventDetails) => {
-    const token = localStorage.getItem('mockUser') ? 'mock-valid-token' : null;
+    const token = sessionStorage.getItem('googleIdToken') || (localStorage.getItem('mockUser') ? 'mock-valid-token' : null);
+    
     if (!token) {
-      alert('Please sign in to sync with Google Calendar.');
+      alert('Please sign in with Google to sync events to your calendar.');
       return;
     }
 
@@ -18,13 +27,16 @@ export function initCalendarSync() {
         },
         body: JSON.stringify(eventDetails)
       });
+      
       if (res.ok) {
-        alert('Event successfully added to your Calendar!');
+        alert('Event successfully added to your Google Calendar!');
       } else {
-        alert('Failed to add event.');
+        const errorData = await res.json().catch(() => ({}));
+        alert(`Failed to add event: ${errorData.error || 'Unknown error'}`);
       }
     } catch (e) {
-      alert('Error connecting to server.');
+      console.error('Calendar Sync Error:', e);
+      alert('Error connecting to the server. Please try again later.');
     }
   };
 }

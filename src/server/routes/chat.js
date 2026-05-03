@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { MAX_MESSAGE_LENGTH } = require('../utils/constants');
 
 /**
  * Election knowledge base with comprehensive, factual, non-partisan answers
@@ -105,7 +106,7 @@ const KNOWLEDGE_BASE = [
  * @param {string} query - The user's question
  * @returns {string} The best matching response
  */
-function findBestResponse(query) {
+const findBestResponse = (query) => {
   const lowerQuery = query.toLowerCase();
   let bestMatch = null;
   let bestScore = 0;
@@ -128,34 +129,36 @@ function findBestResponse(query) {
   }
 
   return 'That\'s a great question! While I may not have the specific answer, I recommend checking vote.gov for official voter registration info, ballotpedia.org for ballot details, or contacting your local election office. Is there something else about elections I can help with?';
-}
+};
 
 /**
- * POST /api/chat
- * Smart election assistant using local knowledge base
- * @param {Object} req.body.messages - Array of {role, content} objects
- * @returns {Object} { reply: string }
+ * @route POST /api/chat
+ * @desc Smart election assistant using local knowledge base
+ * @access Public
  */
-router.post('/', async (req, res) => {
+router.post('/', async (req, res, next) => {
   try {
     const { messages } = req.body;
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return res.status(400).json({ error: 'messages array is required' });
+      const error = new Error('messages array is required');
+      error.status = 400;
+      throw error;
     }
 
-    const lastUserMessage = [...messages].reverse().find(m => m.role === 'user');
+    const lastUserMessage = [...messages].reverse().find((m) => m.role === 'user');
     if (!lastUserMessage || !lastUserMessage.content) {
-      return res.status(400).json({ error: 'No user message found' });
+      const error = new Error('No user message found');
+      error.status = 400;
+      throw error;
     }
 
-    const query = String(lastUserMessage.content).slice(0, 500).trim();
+    const query = String(lastUserMessage.content).slice(0, MAX_MESSAGE_LENGTH).trim();
     const reply = findBestResponse(query);
 
     res.json({ reply });
   } catch (err) {
-    console.error('Chat route error:', err.message);
-    res.status(500).json({ error: 'Internal server error. Please try again.' });
+    next(err);
   }
 });
 

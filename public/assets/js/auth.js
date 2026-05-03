@@ -60,12 +60,12 @@ function showSetupGuide() {
   const signInWrapper = document.getElementById('g-signin-btn');
   if (signInWrapper) {
     signInWrapper.innerHTML = `
-      <div style="padding:15px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; font-size:13px; text-align:center;">
-        <p style="margin-bottom:8px; color:#cbd5e1;">Google Login Setup Required</p>
-        <button onclick="window.open('https://console.cloud.google.com/apis/credentials', '_blank')" class="btn btn-primary" style="padding:6px 12px; font-size:12px;">
-          Configure OAuth ID
+      <div style="display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); padding: 6px 12px; border-radius: 99px; backdrop-filter: blur(8px);">
+        <span style="font-size: 12px; color: #cbd5e1; font-weight: 500; white-space: nowrap;">Login Config Needed</span>
+        <button onclick="window.open('https://console.cloud.google.com/apis/credentials', '_blank')" 
+                style="background: #2563eb; color: #fff; border: none; padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 700; cursor: pointer; transition: background 0.2s; white-space: nowrap;">
+          SETUP
         </button>
-        <p style="margin-top:8px; font-size:11px; color:#94a3b8;">Add your ID to .env to enable</p>
       </div>
     `;
   }

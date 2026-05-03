@@ -1,0 +1,42 @@
+/* Mobile-first approach was largely used in main, but here are specific tweaks */
+
+@media (max-width: 768px) {
+  .header-container {
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 10px;
+  }
+  
+  .app-header {
+    height: auto;
+    padding: 10px 0;
+  }
+
+  .nav-pills {
+    order: 3;
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .auth-container {
+    order: 2;
+  }
+
+  .hero-section h2 {
+    font-size: 2rem;
+  }
+
+  .hero-actions {
+    flex-direction: column;
+  }
+
+  /* Make sure chat panel fits on mobile */
+  #chat-panel {
+    width: calc(100% - 40px) !important;
+    right: 20px !important;
+    bottom: 80px !important;
+    height: 70vh !important;
+  }
+}

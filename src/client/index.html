@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en" style="scroll-behavior: smooth;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElectionIQ - Interactive Election Education Assistant</title>
+  <meta name="description" content="An interactive election education assistant providing registration info, timeline tracking, and live polling locations.">
+  
+  <!-- Content Security Policy -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://apis.google.com https://maps.googleapis.com https://www.gstatic.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https://maps.gstatic.com https://maps.googleapis.com https://*.googleusercontent.com; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com;">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Google Platform Library -->
+  <script src="https://apis.google.com/js/platform.js" async defer></script>
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="/assets/css/main.css">
+  <link rel="stylesheet" href="/assets/css/components.css">
+  <link rel="stylesheet" href="/assets/css/responsive.css">
+
+  <!-- GA4 Tracking -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-MOCKID123"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-MOCKID123');
+  </script>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo">
+        <h1>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 8px; vertical-align: text-bottom;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>
+          ElectionIQ
+        </h1>
+      </div>
+      
+      <nav class="nav-pills">
+        <a href="#hero" class="nav-pill">Home</a>
+        <a href="#timeline-section" class="nav-pill">Timeline</a>
+        <a href="#quiz-section" class="nav-pill">Quiz</a>
+        <a href="#polling-locator" class="nav-pill">Find Polling Place</a>
+        <a href="#glossary" class="nav-pill">Glossary</a>
+      </nav>
+
+      <div class="auth-container">
+        <div id="g-signin-btn"></div>
+        <div id="user-display" style="display:none;align-items:center;gap:10px;"></div>
+        <button id="sign-out-btn" class="btn btn-secondary" style="display:none;">Sign out</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="main-content">
+    
+    <section id="hero" class="hero-section">
+      <div class="particles-container">
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+        <div class="particle p5"></div>
+      </div>
+      <div class="hero-content">
+        <h2>Empower Your Vote</h2>
+        <p>Interactive timelines, polling place locators, and an AI assistant to answer all your election questions.</p>
+        <div class="hero-actions">
+          <button class="btn btn-large btn-solid-white" onclick="document.getElementById('timeline-section').scrollIntoView()">Explore Timeline</button>
+          <button class="btn btn-large btn-outline-white" id="start-quiz-btn">Test Your Knowledge</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Election News Search -->
+    <section id="news-search" class="card-section">
+      <h3>Election News Search</h3>
+      <div style="max-width: 600px; margin: 0 auto 2rem;">
+        <p style="color: #64748b; margin-bottom: 1rem; text-align: center;">Search the latest election news, candidates, and ballot information.</p>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="search-input" placeholder="Search..." style="flex: 1; padding: 12px 16px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 16px;">
+          <button id="search-btn" style="background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 0 24px; font-weight: 600; cursor: pointer; transition: background 0.2s;">Search</button>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; justify-content: center;">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="Voting Rights">Voting Rights</button>
+          <button class="filter-btn" data-filter="Candidates">Candidates</button>
+          <button class="filter-btn" data-filter="Ballot Measures">Ballot Measures</button>
+          <button class="filter-btn" data-filter="Polling Places">Polling Places</button>
+        </div>
+      </div>
+      <div id="search-status" style="text-align: center; color: #64748b; margin-bottom: 1rem;"></div>
+      <div id="search-results" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem;"></div>
+    </section>
+
+    <!-- Voter Registration Checker -->
+    <section id="registration" class="card-section">
+      <h3>Voter Registration Checker</h3>
+      <form id="registration-form" class="registration-form">
+        <div class="form-group">
+          <label for="reg-name">Full Name</label>
+          <input type="text" id="reg-name" placeholder="e.g. Jane Smith" required>
+        </div>
+        <div class="form-group">
+          <label for="reg-state">State</label>
+          <div class="select-wrapper">
+            <select id="reg-state" required>
+              <option value="">Select State</option>
+              <option value="AL">Alabama</option>
+              <option value="AK">Alaska</option>
+              <option value="AZ">Arizona</option>
+              <option value="AR">Arkansas</option>
+              <option value="CA">California</option>
+              <option value="CO">Colorado</option>
+              <option value="CT">Connecticut</option>
+              <option value="DE">Delaware</option>
+              <option value="FL">Florida</option>
+              <option value="GA">Georgia</option>
+              <option value="HI">Hawaii</option>
+              <option value="ID">Idaho</option>
+              <option value="IL">Illinois</option>
+              <option value="IN">Indiana</option>
+              <option value="IA">Iowa</option>
+              <option value="KS">Kansas</option>
+              <option value="KY">Kentucky</option>
+              <option value="LA">Louisiana</option>
+              <option value="ME">Maine</option>
+              <option value="MD">Maryland</option>
+              <option value="MA">Massachusetts</option>
+              <option value="MI">Michigan</option>
+              <option value="MN">Minnesota</option>
+              <option value="MS">Mississippi</option>
+              <option value="MO">Missouri</option>
+              <option value="MT">Montana</option>
+              <option value="NE">Nebraska</option>
+              <option value="NV">Nevada</option>
+              <option value="NH">New Hampshire</option>
+              <option value="NJ">New Jersey</option>
+              <option value="NM">New Mexico</option>
+              <option value="NY">New York</option>
+              <option value="NC">North Carolina</option>
+              <option value="ND">North Dakota</option>
+              <option value="OH">Ohio</option>
+              <option value="OK">Oklahoma</option>
+              <option value="OR">Oregon</option>
+              <option value="PA">Pennsylvania</option>
+              <option value="RI">Rhode Island</option>
+              <option value="SC">South Carolina</option>
+              <option value="SD">South Dakota</option>
+              <option value="TN">Tennessee</option>
+              <option value="TX">Texas</option>
+              <option value="UT">Utah</option>
+              <option value="VT">Vermont</option>
+              <option value="VA">Virginia</option>
+              <option value="WA">Washington</option>
+              <option value="WV">West Virginia</option>
+              <option value="WI">Wisconsin</option>
+              <option value="WY">Wyoming</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="reg-dob">Date of Birth</label>
+          <input type="date" id="reg-dob" required>
+        </div>
+        <button type="submit" class="btn btn-primary check-status-btn">Check Status</button>
+      </form>
+      <div id="reg-result" aria-live="polite"></div>
+    </section>
+
+    <!-- Interactive Election Timeline -->
+    <section id="timeline-section" class="card-section">
+      <h3>Election Timeline</h3>
+      <div class="timeline-container" id="timeline-container">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- Election Quiz Section -->
+    <section id="quiz-section" class="card-section" style="background: linear-gradient(135deg, #1e3a8a 0%, #1e1b4b 100%); color: #fff;">
+      <div style="max-width: 800px; margin: 0 auto; text-align: center; padding: 2rem 0;">
+        <h3 style="color: #fff; margin-bottom: 1rem;">Test Your Election Knowledge</h3>
+        <p style="color: #bfdbfe; font-size: 1.125rem; margin-bottom: 2rem;">How much do you really know about the American democratic process? Take our 10-question challenge and see where you rank.</p>
+        <div style="display: flex; justify-content: center; gap: 2rem; margin-bottom: 2rem;">
+          <div style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700;">10</div>
+            <div style="font-size: 0.875rem; color: #93c5fd;">Questions</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700;">30s</div>
+            <div style="font-size: 0.875rem; color: #93c5fd;">Per Question</div>
+          </div>
+          <div style="text-align: center;">
+            <div style="font-size: 2rem; font-weight: 700;">GA4</div>
+            <div style="font-size: 0.875rem; color: #93c5fd;">Tracked</div>
+          </div>
+        </div>
+        <button id="start-quiz-btn-section" class="btn btn-large btn-solid-white">Start the Quiz</button>
+      </div>
+    </section>
+
+    <!-- Polling Place Finder -->
+    <section id="polling-locator" class="card-section">
+      <h3>Find Your Polling Place</h3>
+      <div class="polling-form">
+        <label for="address-input" class="sr-only">Enter your address</label>
+        <input type="text" id="address-input" placeholder="Enter your address...">
+        <button id="find-polling-btn" class="btn btn-primary">Find</button>
+      </div>
+      <div id="map-container" class="map-container">
+        <!-- Map embedded here -->
+      </div>
+    </section>
+
+    <!-- Election Glossary -->
+    <section id="glossary" class="card-section">
+      <h3>Election Glossary</h3>
+      <input type="text" id="glossary-search" placeholder="Filter terms..." aria-label="Filter terms">
+      <div id="glossary-container" class="glossary-grid">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- Quiz Modal -->
+    <dialog id="quiz-modal" class="modal" aria-labelledby="quiz-title">
+      <div class="modal-content">
+        <h3 id="quiz-title">Election Quiz</h3>
+        <div id="quiz-progress">
+          <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+        </div>
+        <div id="quiz-timer" class="timer">30</div>
+        <div id="quiz-question-container"></div>
+        <button id="close-quiz" class="btn btn-secondary mt-4">Close</button>
+      </div>
+    </dialog>
+
+  </main>
+
+  <!-- App Scripts -->
+  <script type="module" src="/assets/js/app.js"></script>
+  <!-- Auth handled standalone (uses dynamic Firebase imports) -->
+  <script src="/assets/js/auth.js" defer></script>
+</body>
+</html>

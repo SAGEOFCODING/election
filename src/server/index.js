@@ -60,11 +60,11 @@ app.use('/api/search', searchRoutes);
 app.use('/api/chat', chatRoutes);
 
 // Static Client Files
-app.use(express.static(path.join(__dirname, '../client')));
+app.use(express.static(path.join(__dirname, '../../public')));
 
 // Catch-all for SPA
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../client/index.html'));
+  res.sendFile(path.join(__dirname, '../../public/index.html'));
 });
 
 // Central Error Handling

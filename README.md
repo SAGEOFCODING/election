@@ -4,7 +4,7 @@
 Civic Education & Voter Empowerment
 
 ## Approach & Logic
-ElectionIQ is designed with a modular architecture separating the Express.js backend from the Vanilla JS/CSS frontend. The UI focuses on premium Gen-Z aesthetics, featuring dark mode, glassmorphism, and responsive CSS variables. Accessibility is a first-class citizen, strictly adhering to WCAG 2.1 AA standards with semantic HTML, ARIA labels, and keyboard navigability. The logic relies on Google Services to provide reliable mapping, search, authentication, and personalized calendar reminders, while Firebase Firestore stores persistent user state and generic election content.
+ElectionIQ is designed with a modular architecture separating the Express.js backend from the static frontend (served from the `public` directory). The UI focuses on premium Gen-Z aesthetics, featuring dark mode, glassmorphism, and responsive CSS variables. The project is optimized for deployment on Vercel and Google Cloud Run. Accessibility is a first-class citizen, strictly adhering to WCAG 2.1 AA standards with semantic HTML, ARIA labels, and keyboard navigability. The logic relies on Google Services to provide reliable mapping, search, authentication, and personalized calendar reminders, while Firebase Firestore stores persistent user state and generic election content.
 
 ## How It Works
 1. **Sign In**: Users click "Sign in with Google" to authenticate via Firebase. Their session token is securely passed to the backend.

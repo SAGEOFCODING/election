@@ -12,6 +12,7 @@ async function initGoogleAuth() {
 
     if (!clientId || clientId.includes('your_')) {
       console.warn('ElectionIQ: GOOGLE_CLIENT_ID missing in .env. Official Login will not work.');
+      showSetupGuide();
       return;
     }
 
@@ -50,6 +51,24 @@ function onSignIn(googleUser) {
 
 function onSignInFailure(error) {
   console.error('Google Sign-In Error:', error);
+  if (error.error === 'idpiframe_initialization_failed' || error.error === 'invalid_client') {
+    showSetupGuide();
+  }
+}
+
+function showSetupGuide() {
+  const signInWrapper = document.getElementById('g-signin-btn');
+  if (signInWrapper) {
+    signInWrapper.innerHTML = `
+      <div style="padding:15px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; font-size:13px; text-align:center;">
+        <p style="margin-bottom:8px; color:#cbd5e1;">Google Login Setup Required</p>
+        <button onclick="window.open('https://console.cloud.google.com/apis/credentials', '_blank')" class="btn btn-primary" style="padding:6px 12px; font-size:12px;">
+          Configure OAuth ID
+        </button>
+        <p style="margin-top:8px; font-size:11px; color:#94a3b8;">Add your ID to .env to enable</p>
+      </div>
+    `;
+  }
 }
 
 function signinChanged(val) {
